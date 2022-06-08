@@ -32,7 +32,7 @@ const Title = styled.h2`
     margin-bottom:20px;
 `
 const Overview = styled.p`
-    font-size : 18px;
+    font-size : 16px;
     width : 50%;
 `
 const Date = styled.h3`

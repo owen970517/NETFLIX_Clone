@@ -3,6 +3,6 @@
 - useQuery를 사용하여 movie api fetching을 쉽게 구현했습니다.
 - themeprovider 를 사용하여 context를 통해 모든 컴포넌트에게 미리 설정한 속성을 사용할 수 있도록 구현했습니다.
 - styled-components를 사용하여 따로 css파일을 만들지 않고 tsx 파일 내에 구현했습니다.
-- framer motion을 사용하여 다양하고 멋진 애니메이션을 구현했습니다.
+- framer motion을 사용하여 slider, scroll같이 다양하고 멋진 애니메이션을 구현했습니다.
 - useForm을 사용하여 유효성 검사를 구현했습니다.
 - useNavigate를 사용하여 동적 라우팅을 구현했습니다.

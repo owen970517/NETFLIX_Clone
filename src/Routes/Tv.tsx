@@ -1,10 +1,11 @@
 import { useQuery } from "react-query"
-import { getTvShows} from "../api"
+import { getOnAirShows, getTopTvShows, getTvShows} from "../api"
 import styled from 'styled-components'
 import { AnimatePresence, motion, useViewportScroll } from "framer-motion"
 import { makeImagePath } from "../Utilis";
 import { useState } from "react";
-import { Navigate, useNavigate } from "react-router-dom";
+import { Navigate, PathMatch, useMatch, useNavigate } from "react-router-dom";
+import { GrNext,GrPrevious } from "react-icons/gr";
 interface ITV {
     id : number;
     name : string;
@@ -56,8 +57,13 @@ const Slider = styled.div`
     position:relative;
     top : -100px;
 `
+const TvSlider = styled.div`
+    position:relative;
+    top : 100px;
+`
 const Section = styled.div`
-    margin-bottom : 20px;
+    padding : 10px;
+    margin-bottom : 10px;
     display : flex;
     justify-content : space-between;
     align-items : center;
@@ -84,6 +90,19 @@ const Box = styled(motion.div)<{bgPhoto : string}>`
     }
 `
 const rowVar = {
+    hidden:(back:boolean) => ({
+        x : back ? -window.outerWidth-10: window.outerWidth+10,
+        opacity : 1
+    }),
+    visible : {
+        x:0,
+    },
+    exit:(back:boolean) => ( {
+        x : back ? window.outerWidth+10 : -window.outerWidth-10,
+        opacity :0
+    })
+}
+const TvrowVar = {
     hidden:(back:boolean) => ({
         x : back ? -window.outerWidth-10: window.outerWidth+10,
         opacity : 1
@@ -143,6 +162,7 @@ const BigTitle = styled.h2`
     text-align:center;
     font-size : 28px;
 `
+
 const offset =6;
 const boxVar = {
     normal : {
@@ -169,67 +189,125 @@ const infoVar ={
 
 function Tv() {
     const navigate = useNavigate();
-    const {data , isLoading} = useQuery<IGetTvResult>(['show' , 'popular'] , getTvShows);
+    const {data:Tvshow , isLoading:TvLoading} = useQuery<IGetTvResult>(['show' , 'popular'] , getTvShows);
+    const {data:Topshow , isLoading:TopTvLoading} = useQuery<IGetTvResult>(['show' , 'top'] , getTopTvShows);
+    const {data:OnAir , isLoading:OnAirLoading} = useQuery<IGetTvResult>(['show' , 'on_air'] , getOnAirShows);
+    const tvPathMatch: PathMatch<string> | null = useMatch("/tv/:id");
+    const {scrollY} = useViewportScroll();
     const [back,setBack] = useState(false);
     const [index,setIndex] = useState(0)
+    const [Topindex,setTopIndex] = useState(0)
     const [leaving ,setLeaving] = useState(false);
     const NextIndex = () => {
-        if(data) {
+        if(Tvshow) {
             if(leaving) return
             toggleLeaving();
             setBack(false);
-            const totalMovies = data.results.length-1;
+            const totalMovies = Tvshow.results.length-1;
             const maxIndex = Math.floor(totalMovies / offset)-1;
             setIndex((prev) => prev ===maxIndex ? 0 : prev+1);
         }
     };
     const PrevIndex = () => {
-        if(data) {
+        if(Tvshow) {
             if(leaving) return
             toggleLeaving();
             setBack(true);
-            const totalMovies = data.results.length-1;
+            const totalMovies = Tvshow.results.length-1;
             const maxIndex = Math.floor(totalMovies / offset)-1;
             setIndex((prev) => prev === 0 ? maxIndex : prev-1);
+        }
+    };
+    const NextTvIndex = () => {
+        if(Topshow) {
+            if(leaving) return
+            toggleLeaving();
+            setBack(false);
+            const totalPop = Topshow?.results.length-1;
+            const maxIndex = Math.floor(totalPop / offset)-1;
+            setTopIndex((prev) => prev === maxIndex ? 0 : prev+1);
+        }
+    };
+    const PrevTvIndex = () => {
+        if(Topshow) {
+            if(leaving) return
+            toggleLeaving();
+            setBack(true);
+            const totalMovies = Topshow.results.length-1;
+            const maxIndex = Math.floor(totalMovies / offset)-1;
+            setTopIndex((prev) => prev === 0 ? maxIndex : prev-1);
         }
     };
     const toggleLeaving = () => {
         setLeaving(prev=>!prev);
     };
-    const onBoxClick = (movieId :number) => {
-        navigate(`/movies/${movieId}`)
+    const onBoxClick = (tvId :number) => {
+        navigate(`/tv/${tvId}`)
     }
     const onOverlayClick = () => {
-        navigate('/')
+        navigate('/tv')
     }
+    const ShowClick = (tvPathMatch?.params.id && Topshow?.results.find(tv => String(tv.id) === tvPathMatch.params.id)) || (tvPathMatch?.params.id && OnAir?.results.find(tv => String(tv.id) === tvPathMatch.params.id));
     return (
-        <Wrapper> { isLoading ? <Loader>Loading...</Loader> : 
+        <Wrapper> { TvLoading ? <Loader>Loading...</Loader> : 
         <>
-            <Banner bgPhoto ={makeImagePath(data?.results[0].backdrop_path || "")}>
-                <Title>{data?.results[0].name}</Title> 
-                    <Date>{data?.results[0].first_air_date.slice(0,4)} | {data?.results[0].vote_average}</Date>
+            <Banner bgPhoto ={makeImagePath(OnAir?.results[0].backdrop_path || "")}>
+                <Title>{OnAir?.results[0].name}</Title> 
+                    <Date>{OnAir?.results[0].first_air_date.slice(0,4)} | {OnAir?.results[0].vote_average}</Date>
                         <Overview>
-                            {data?.results[0].overview}
+                            {OnAir?.results[0].overview}
                         </Overview>
             </Banner>
             <Slider>
                 <Section>
                     <h3>현재 방영중</h3>
                     <div>
-                        <button onClick={PrevIndex}>left</button>
+                        <button  onClick={PrevIndex}>left</button>
                         <button onClick={NextIndex}>right</button>
                     </div>
                 </Section>
                 <AnimatePresence initial={false} onExitComplete={toggleLeaving}>
                     <Row variants={rowVar} transition={{type:"tween",duration : 1}} initial="hidden"  custom={back} animate="visible" exit='exit' key={index}>
-                        {data?.results.slice(1).slice(offset*index , offset*index + offset).map(tv=> 
+                        {OnAir?.results.slice(1).slice(offset*index , offset*index + offset).map(tv=> 
                         <Box layoutId={tv.id+""} onClick={ ()=> onBoxClick(tv.id)} variants={boxVar} transition ={{type : 'tween'}} initial="normal" whileHover="hover" key={tv.id} bgPhoto ={makeImagePath(tv.backdrop_path ? tv.backdrop_path : tv.poster_path, "w400")}>
                             <Info variants={infoVar}><h4>{tv.name}</h4></Info>
                         </Box>)}
                     </Row>
                 </AnimatePresence>
             </Slider>
-        </>}</Wrapper>
+        <TvSlider>
+            <Section>
+                <h3>인기 컨텐츠</h3>
+                <div>
+                    <button onClick={PrevTvIndex}>left</button>
+                    <button onClick={NextTvIndex}>right</button>
+                </div>
+            </Section>
+            <AnimatePresence initial={false} onExitComplete={toggleLeaving}>
+                <Row variants={TvrowVar} transition={{type:"tween",duration : 1}} initial="hidden"  custom={back} animate="visible" exit='exit' key={Topindex}>
+                    {Topshow?.results.slice(1).slice(offset*Topindex , offset*Topindex + offset).map(tv=> 
+                    <Box layoutId={tv.id+""} onClick={ ()=> onBoxClick(tv.id)} variants={boxVar} transition ={{type : 'tween'}} initial="normal" whileHover="hover" key={tv.id} bgPhoto ={makeImagePath(tv.backdrop_path ? tv.backdrop_path : tv.poster_path, "w400")}>
+                        <Info variants={infoVar}><h4>{tv.name}</h4></Info>
+                    </Box>)}
+                </Row>
+            </AnimatePresence>
+        </TvSlider>
+        <AnimatePresence>
+                { tvPathMatch ? 
+                    (<>
+                        <Overlay onClick={onOverlayClick} exit={{opacity : 0}} animate={{opacity : 1}}/>
+                        <BigMovie style={{ top : scrollY.get()+100}} layoutId={tvPathMatch.params.id}>
+                            {ShowClick && <>
+                                <BigCover style={{backgroundImage : `url(${makeImagePath(ShowClick.backdrop_path,"w500")})`}} ></BigCover>
+                                <BigTitle>{ShowClick.name}</BigTitle>
+                                <p>{ShowClick.overview}</p>
+                            </>}
+                        </BigMovie>
+                    </>) : 
+                    null}
+                </AnimatePresence>                             
+        </>
+        }</Wrapper>
     )
 }
 

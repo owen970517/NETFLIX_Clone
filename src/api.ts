@@ -37,12 +37,21 @@ export interface IDetailMovie {
 
 
 export function getMovies() {
-    return fetch(`${BASE_PATH}/movie/now_playing?api_key=${API_KET}`).then(
+    return fetch(`${BASE_PATH}/movie/now_playing?api_key=${API_KET}&language=ko`).then(
+        response => response.json());
+}
+export function getOnAirShows() {
+    return fetch(`${BASE_PATH}/tv/on_the_air?api_key=${API_KET}&language=ko`).then(
         response => response.json());
 }
 
 export function getTvShows() {
     return fetch(`${BASE_PATH}/tv/popular?api_key=${API_KET}&language=ko`).then(
+        response => response.json());
+}
+
+export function getTopTvShows() {
+    return fetch(`${BASE_PATH}/tv/top_rated?api_key=${API_KET}&language=ko`).then(
         response => response.json());
 }
 
