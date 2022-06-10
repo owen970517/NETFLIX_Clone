@@ -1,11 +1,19 @@
 import { useQuery } from "react-query"
-import { getOnAirShows, getTopTvShows, getTvShows} from "../api"
+import { getOnAirShows, getSimilarTvShows, getTopTvShows, getTvShows} from "../api"
 import styled from 'styled-components'
 import { AnimatePresence, motion, useViewportScroll } from "framer-motion"
 import { makeImagePath } from "../Utilis";
 import { useState } from "react";
-import { Navigate, PathMatch, useMatch, useNavigate } from "react-router-dom";
+import { Navigate, PathMatch, useMatch, useNavigate, useParams } from "react-router-dom";
 import { GrNext,GrPrevious } from "react-icons/gr";
+import Similar from "../Components/Similar";
+import Detail from "../Components/Detail";
+
+interface IGenres {
+    id : number;
+    name : string;
+}
+
 interface ITV {
     id : number;
     name : string;
@@ -14,6 +22,7 @@ interface ITV {
     first_air_date:string;
     overview : string;
     vote_average : number;
+    genres : IGenres[];
 }
 interface IGetTvResult {
     page : number;
@@ -102,19 +111,7 @@ const rowVar = {
         opacity :0
     })
 }
-const TvrowVar = {
-    hidden:(back:boolean) => ({
-        x : back ? -window.outerWidth-10: window.outerWidth+10,
-        opacity : 1
-    }),
-    visible : {
-        x:0,
-    },
-    exit:(back:boolean) => ( {
-        x : back ? window.outerWidth+10 : -window.outerWidth-10,
-        opacity :0
-    })
-}
+
 
 const Info = styled(motion.div)`
     padding :10px;
@@ -141,12 +138,11 @@ const BigMovie = styled(motion.div)`
     position :absolute;
     width :40vw;
     height :80vh;
-    backgroundColor : 'whitesmoke' ;
     left :0 ;
     right :0;
     margin : 0 auto;
     background-color : ${props => props.theme.black.lighter};
-    overflow:hidden;
+    overflow:auto;
     border-radius : 20px;
 `
 
@@ -155,12 +151,26 @@ const BigCover = styled.div`
     background-size: cover;
     background-position: center center;
     height: 300px;
+`;
+
+const BigBox =  styled.div`
+    display : flex;
+    justify-content :space-between;
+    align-items : center;
 `
 
 const BigTitle = styled.h2`
     color : ${props => props.theme.white.lighter};
-    text-align:center;
+    padding : 10px;
     font-size : 28px;
+    position : relative;
+    top : -50px;
+`
+const StarAvg = styled.h2`
+    padding : 10px;
+    font-size : 28px;
+    position : relative;
+    top : -50px;
 `
 
 const offset =6;
@@ -242,12 +252,13 @@ function Tv() {
         setLeaving(prev=>!prev);
     };
     const onBoxClick = (tvId :number) => {
-        navigate(`/tv/${tvId}`)
+        navigate(`/tv/${tvId}`);
     }
     const onOverlayClick = () => {
         navigate('/tv')
     }
     const ShowClick = (tvPathMatch?.params.id && Topshow?.results.find(tv => String(tv.id) === tvPathMatch.params.id)) || (tvPathMatch?.params.id && OnAir?.results.find(tv => String(tv.id) === tvPathMatch.params.id));
+    console.log(ShowClick);
     return (
         <Wrapper> { TvLoading ? <Loader>Loading...</Loader> : 
         <>
@@ -262,8 +273,8 @@ function Tv() {
                 <Section>
                     <h3>현재 방영중</h3>
                     <div>
-                        <button  onClick={PrevIndex}>left</button>
-                        <button onClick={NextIndex}>right</button>
+                        <button  onClick={PrevIndex}>&lt;</button>
+                        <button onClick={NextIndex}>&gt;</button>
                     </div>
                 </Section>
                 <AnimatePresence initial={false} onExitComplete={toggleLeaving}>
@@ -279,14 +290,14 @@ function Tv() {
             <Section>
                 <h3>인기 컨텐츠</h3>
                 <div>
-                    <button onClick={PrevTvIndex}>left</button>
-                    <button onClick={NextTvIndex}>right</button>
+                    <button onClick={PrevTvIndex}>&lt;</button>
+                    <button onClick={NextTvIndex}>&gt;</button>
                 </div>
             </Section>
             <AnimatePresence initial={false} onExitComplete={toggleLeaving}>
-                <Row variants={TvrowVar} transition={{type:"tween",duration : 1}} initial="hidden"  custom={back} animate="visible" exit='exit' key={Topindex}>
+                <Row variants={rowVar} transition={{type:"tween",duration : 1}} initial="hidden"  custom={back} animate="visible" exit='exit' key={Topindex}>
                     {Topshow?.results.slice(1).slice(offset*Topindex , offset*Topindex + offset).map(tv=> 
-                    <Box layoutId={tv.id+""} onClick={ ()=> onBoxClick(tv.id)} variants={boxVar} transition ={{type : 'tween'}} initial="normal" whileHover="hover" key={tv.id} bgPhoto ={makeImagePath(tv.backdrop_path ? tv.backdrop_path : tv.poster_path, "w400")}>
+                    <Box layoutId={tv.id+""} onClick={ ()=> onBoxClick(tv.id)} variants={boxVar} transition ={{type : 'tween'}} initial="normal" whileHover="hover" key={tv.id} bgPhoto ={makeImagePath(tv.backdrop_path ? tv.backdrop_path : tv.poster_path, "w500")}>
                         <Info variants={infoVar}><h4>{tv.name}</h4></Info>
                     </Box>)}
                 </Row>
@@ -298,9 +309,12 @@ function Tv() {
                         <Overlay onClick={onOverlayClick} exit={{opacity : 0}} animate={{opacity : 1}}/>
                         <BigMovie style={{ top : scrollY.get()+100}} layoutId={tvPathMatch.params.id}>
                             {ShowClick && <>
-                                <BigCover style={{backgroundImage : `url(${makeImagePath(ShowClick.backdrop_path,"w500")})`}} ></BigCover>
-                                <BigTitle>{ShowClick.name}</BigTitle>
-                                <p>{ShowClick.overview}</p>
+                                <BigCover style={{backgroundImage : `linear-gradient(to top,black,transparent) ,url(${makeImagePath(ShowClick.backdrop_path ? ShowClick.backdrop_path : ShowClick.poster_path,"w500")})`}}/>
+                                <BigBox>
+                                    <BigTitle>{ShowClick.name}</BigTitle>
+                                    <StarAvg>⭐{ShowClick.vote_average}</StarAvg>
+                                </BigBox>
+                                <Detail></Detail>
                             </>}
                         </BigMovie>
                     </>) : 

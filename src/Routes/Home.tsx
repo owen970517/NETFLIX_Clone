@@ -5,6 +5,7 @@ import { useQuery } from "react-query"
 import { useMatch, useNavigate ,PathMatch} from "react-router-dom"
 import styled from "styled-components"
 import { getMovies, IGetMovieResult} from "../api"
+import Detail from "../Components/Detail"
 import { makeImagePath } from "../Utilis"
 
 const Wrapper = styled.div`
@@ -103,12 +104,11 @@ const BigMovie = styled(motion.div)`
     position :absolute;
     width :40vw;
     height :80vh;
-    backgroundColor : 'whitesmoke' ;
     left :0 ;
     right :0;
     margin : 0 auto;
     background-color : ${props => props.theme.black.lighter};
-    overflow:hidden;
+    overflow:auto;
     border-radius : 20px;
 `
 
@@ -207,7 +207,7 @@ function Home() {
                             {MovieClick && <>
                                 <BigCover style={{backgroundImage : `url(${makeImagePath(MovieClick.backdrop_path,"w500")})`}} ></BigCover>
                                 <BigTitle>{MovieClick.title}</BigTitle>
-                                <p>{MovieClick.overview}</p>
+                                <Detail></Detail>
                             </>}
                         </BigMovie>
                     </>) : 
