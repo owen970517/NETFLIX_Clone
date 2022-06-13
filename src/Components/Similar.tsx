@@ -2,9 +2,8 @@ import { motion } from 'framer-motion';
 import React from 'react';
 import { useQuery } from 'react-query';
 import styled from 'styled-components';
-import { getSimilarTvShows} from '../api';
+import { getSimilarMovies, getSimilarTvShows, IGetMoviesDetail} from '../api';
 import { makeImagePath } from '../Utilis';
-import noPoster from '../assets/noPosterSmall.png';
 import { useParams } from 'react-router-dom';
 const Container = styled.div`
   display: grid;
@@ -75,15 +74,12 @@ interface RouteParams {
   tvId: string;
 }
 const Similar = () => {
-
+  const { movieId,tvId } = useParams() ;
+  const {data , isLoading} = useQuery<IGetMoviesDetail>(['similar'] ,  () => (movieId ? getSimilarMovies(+movieId) : getSimilarTvShows(tvId as any)))
+  console.log(data)
   return (
     <>
       <SimilarTitle>비슷한 콘텐츠</SimilarTitle>
-        <h3>asdsakjdlksajdlksajdlksajdsalsdjlaskdjaldj
-            akdjlsadjlsajdlsakdjlajdalksdjsa'asdsakjdlksajdlksajdlksajdsalsdjlaskdjaldjasjdklsajd
-            kdjfldskjfselkfjlekjflkrejflresjflkrejf
-            erkfljreslfleskfjlresfs
-        </h3>
     </>
   );
 };

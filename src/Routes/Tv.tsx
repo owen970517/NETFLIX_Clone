@@ -144,6 +144,13 @@ const BigMovie = styled(motion.div)`
     background-color : ${props => props.theme.black.lighter};
     overflow:auto;
     border-radius : 20px;
+    &::-webkit-scrollbar {
+        width: 4px;
+      }
+      &::-webkit-scrollbar-thumb {
+        border-radius: 2px;
+        background: #ccc;
+      }
 `
 
 const BigCover = styled.div`

@@ -30,6 +30,7 @@ export interface IGetMovieResult {
 export interface IDetailMovie {
     page :number;
     results : IMovie[];
+    genre  : IGenres[];
     overview : string;
     original_title : string;
     media_type: string;
@@ -59,6 +60,7 @@ export interface IGetMoviesDetail {
     number_of_seasons: number;
 }
 
+
 export function getMovies() {
     return fetch(`${BASE_PATH}/movie/now_playing?api_key=${API_KET}&language=ko`).then(
         response => response.json());
@@ -79,7 +81,7 @@ export function getTopTvShows() {
 }
 
 export function getSimilarTvShows(tvId:number) {
-    return fetch(`${BASE_PATH}/tv/${tvId}similar?api_key=${API_KET}&language=ko`).then(
+    return fetch(`${BASE_PATH}/tv/${tvId}/similar?api_key=${API_KET}&language=ko`).then(
         response => response.json());
 }
 export function getDetailTvShows(tvId:number) {
@@ -91,13 +93,13 @@ export function getDetailMovies(movieId:number) {
         response => response.json());
 }
 
-export function getSimilarMovies(id:number) {
-    return fetch(`${BASE_PATH}/movie/${id}similar?api_key=${API_KET}&language=ko`).then(
+export function getSimilarMovies(movieId:number) {
+    return fetch(`${BASE_PATH}/movie/${movieId}/similar?api_key=${API_KET}&language=ko`).then(
         response => response.json());
 }
 
 
-export function getDetailMovie(title:string) {
+export function getSearch(title:string) {
     return fetch(`${BASE_PATH}/search/multi?api_key=${API_KET}&language=ko&query=${title}`).then(
         response => response.json());
 }

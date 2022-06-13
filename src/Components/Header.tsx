@@ -1,7 +1,7 @@
 import styled from "styled-components"
 import { motion, useAnimation, useViewportScroll } from "framer-motion"
 import { Link, useMatch , PathMatch, useNavigate} from "react-router-dom"
-import { useEffect, useState } from "react"
+import { useEffect, useRef, useState } from "react"
 import { useForm } from 'react-hook-form';
 const Nav = styled(motion.nav)`
     display: flex;
@@ -119,7 +119,8 @@ function Header() {
           inputAnimation.start({ scaleX: 1 });
         }
         setSearchOpen((prev) => !prev);
-      };
+        setFocus("keyword");
+      }
     useEffect(()=> {
         scrollY.onChange(()=> { 
             if(scrollY.get() > 80) {
@@ -130,9 +131,10 @@ function Header() {
     });
     },[scrollY , navAnimation])
     const navigate = useNavigate();
-    const {register , handleSubmit} = useForm<IForm>();
+    const {register , handleSubmit , setFocus,setValue} = useForm<IForm>();
     const onValid = (data:IForm) => {
-        navigate(`/search?keyword=${data.keyword}`);
+        navigate(`/search/${data.keyword}`);
+        setValue("keyword" , "");
     }
     
     return (

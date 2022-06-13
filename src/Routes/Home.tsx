@@ -10,7 +10,6 @@ import { makeImagePath } from "../Utilis"
 
 const Wrapper = styled.div`
     background-color : black;
-
 `
 const Loader = styled.div` 
     height : 20vh;
